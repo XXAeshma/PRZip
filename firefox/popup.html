@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>PR File Zipper</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      color: #1f2328;
+      background: #fff;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px;
+      border-bottom: 1px solid #d0d7de;
+      background: #f6f8fa;
+    }
+
+    .header-icon {
+      width: 32px; height: 32px;
+      background: #2da44e;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .header h1 {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .header p {
+      font-size: 11px;
+      color: #57606a;
+      margin-top: 1px;
+    }
+
+    .body { padding: 16px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #1f2328;
+    }
+
+    .token-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    input[type="password"],
+    input[type="text"] {
+      flex: 1;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    input:focus {
+      border-color: #0969da;
+      box-shadow: 0 0 0 3px rgba(9,105,218,.15);
+    }
+
+    .icon-btn {
+      padding: 5px 8px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      background: #f6f8fa;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .12s;
+    }
+    .icon-btn:hover { background: #e9ecef; }
+
+    .btn-save {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      padding: 7px;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      background: #2da44e;
+      color: #fff;
+      cursor: pointer;
+      transition: background .12s;
+    }
+    .btn-save:hover { background: #2c974b; }
+
+    .status {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+    .status.show { display: flex; }
+    .status.ok  { background: #dafbe1; color: #1a7f37; border: 1px solid #a7f3c7; }
+    .status.err { background: #ffebe9; color: #cf222e; border: 1px solid #ffa8a3; }
+
+    .hint {
+      margin-top: 14px;
+      padding: 10px;
+      background: #f6f8fa;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #57606a;
+      line-height: 1.6;
+    }
+
+    .hint a {
+      color: #0969da;
+      text-decoration: none;
+    }
+    .hint a:hover { text-decoration: underline; }
+
+    .hint code {
+      background: rgba(175,184,193,.2);
+      border-radius: 3px;
+      padding: 0 4px;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .clear-btn {
+      display: block;
+      width: 100%;
+      margin-top: 8px;
+      padding: 5px;
+      font-size: 11px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      background: transparent;
+      color: #cf222e;
+      cursor: pointer;
+      transition: background .12s;
+    }
+    .clear-btn:hover { background: #ffebe9; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="#fff">
+      <path d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14Z"/>
+      <path d="M7.25 7.689V2a.75.75 0 0 1 1.5 0v5.689l1.97-1.97a.749.749 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.779a.749.749 0 1 1 1.06-1.06l1.97 1.97Z"/>
+    </svg>
+  </div>
+  <div>
+    <h1>PR File Zipper</h1>
+    <p>Download all changed PR files as ZIP</p>
+  </div>
+</div>
+
+<div class="body">
+  <label for="tokenInput">GitHub Personal Access Token</label>
+  <div class="token-row">
+    <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false"/>
+    <button class="icon-btn" id="toggleVisibility" title="Toggle visibility" aria-label="Toggle token visibility">
+      <svg id="eyeIcon" width="16" height="16" viewBox="0 0 16 16" fill="#57606a">
+        <path d="M8 2c1.981 0 3.671.992 4.933 2.078 1.27 1.091 2.187 2.345 2.637 3.023a1.62 1.62 0 0 1 0 1.798c-.45.678-1.367 1.932-2.637 3.023C11.67 13.008 9.981 14 8 14c-1.981 0-3.671-.992-4.933-2.078C1.797 10.83.88 9.576.43 8.898a1.62 1.62 0 0 1 0-1.798c.45-.677 1.367-1.931 2.637-3.022C4.33 2.992 6.019 2 8 2ZM1.679 7.932a.12.12 0 0 0 0 .136c.411.622 1.241 1.75 2.366 2.717C5.176 11.758 6.527 12.5 8 12.5c1.473 0 2.824-.742 3.955-1.715 1.124-.967 1.954-2.096 2.366-2.717a.12.12 0 0 0 0-.136c-.412-.621-1.242-1.75-2.366-2.717C10.824 4.242 9.473 3.5 8 3.5c-1.473 0-2.824.742-3.955 1.715-1.124.967-1.954 2.096-2.366 2.717ZM8 10a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 10Z"/>
+      </svg>
+    </button>
+  </div>
+
+  <button class="btn-save" id="saveBtn">Save Token</button>
+  <button class="clear-btn" id="clearBtn">Remove saved token</button>
+
+  <div class="status" id="statusMsg">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" id="statusIcon"></svg>
+    <span id="statusText"></span>
+  </div>
+
+  <div class="hint">
+    A token is <strong>optional for public repos</strong> but required for private repos and higher rate limits.<br><br>
+    <strong>Classic PAT</strong> (recommended): <a href="https://github.com/settings/tokens/new?scopes=repo&description=PR+File+Zipper" target="_blank">Create one here</a> with the <code>repo</code> scope.<br><br>
+    <strong>Fine-grained PAT:</strong> Grant <code>Contents: Read</code> permission and select the repositories you need access to.<br><br>
+    Then navigate to any GitHub PR and click the <strong>Download All</strong> button next to "Files changed".
+  </div>
+</div>
+
+<script src="browser-polyfill.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>
