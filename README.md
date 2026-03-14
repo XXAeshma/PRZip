@@ -55,6 +55,8 @@ A token is **not required** for public repos but is needed for private repos and
 You can create a Classic PAT here:  
 <https://github.com/settings/tokens/new?scopes=repo&description=PR+File+Zipper>
 
+> **SSO users:** If your organization enforces a Single Sign-On (SSO) policy, you will need to authorize your token for SSO after creating it. Go to **Settings → Developer settings → Personal access tokens**, click **Configure SSO** next to your token, and authorize it for the relevant organization.
+
 ## Project Structure
 
 ```
